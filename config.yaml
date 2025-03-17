@@ -14,27 +14,38 @@ visualization:
 
 sensor:
   distance_range: 40.0
-  angle_range: 240.0
+  angle_range: 200.0
+
+
+phantom:
+  sensor: ${sensor}
 
 agents:
   # Ego
   - type: vehicle
     obstacle_shape: [2.0, 4.0]
-    initial_position: [46.5, -20.0]
+    initial_position: [46.5, -10.0]
     initial_velocity: 0.0
     initial_acceleration: 0.0
     initial_orientation: 90.0
 
   - type: vehicle
     obstacle_shape: [2.0, 4.0]
-    initial_position: [5.0, 0.0]
-    initial_velocity: 10
+    initial_position: [43.5, 20.0]
+    initial_velocity: 8.0
     initial_acceleration: 0.0
-    initial_orientation: 0.0
+    initial_orientation: -90.0
+
+  # - type: vehicle
+  #   obstacle_shape: [2.0, 4.0]
+  #   initial_position: [5.0, 0.0]
+  #   initial_velocity: 10
+  #   initial_acceleration: 0.0
+  #   initial_orientation: 0.0
   
-  - type: vehicle
-    obstacle_shape: [2.0, 4.0]
-    initial_position: [80.0, 3.0]
-    initial_velocity: 10
-    initial_acceleration: 0.0
-    initial_orientation: 180.0
+  # - type: vehicle
+  #   obstacle_shape: [2.0, 4.0]
+  #   initial_position: [80.0, 3.0]
+  #   initial_velocity: 10
+  #   initial_acceleration: 0.0
+  #   initial_orientation: 180.0

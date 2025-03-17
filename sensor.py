@@ -1,4 +1,5 @@
 import numpy as np
+from functools import reduce
 import shapely
 from shapely.geometry import Point
 from commonroad.geometry.shape import ShapeParams
@@ -10,11 +11,14 @@ from building import Building
 import helper as hf
 
 class Sensor:
-    def __init__(self, config_sensor):
+    def __init__(self, config_sensor, lanelet_network):
         self.config_sensor = config_sensor
         # self.scenario = scenario
         self.distance_range = config_sensor.distance_range
         self.angle_range = config_sensor.angle_range
+
+        self.lanelet_network = lanelet_network
+        self.road_polygon, self.lanelet_polygons = self._convert_lanelet_network()
 
         self.obstacle_occlusions = []
 
@@ -28,6 +32,20 @@ class Sensor:
         ]
         sector = shapely.geometry.Polygon([center] + points + [center])
         return sector
+    
+    def _convert_lanelet_network(self):
+        lanelet_polygons = [polygon.shapely_object for polygon in self.lanelet_network.lanelet_polygons]
+        road_polygon = reduce(lambda x, y: x.union(y), lanelet_polygons)
+
+        return road_polygon, lanelet_polygons
+    
+    def calc_occluded_lanelets(self, ego_pos, ego_orientation, dynamic_obstacles, static_obstacles):
+        visible_area, obstacle_polygon = self.calc_visible_area(
+            ego_pos, ego_orientation, dynamic_obstacles, static_obstacles
+        )
+        occluded_lanelet = obstacle_polygon.intersection(self.road_polygon)
+        return occluded_lanelet
+
 
     def calc_visible_area(
         self,
@@ -119,9 +137,10 @@ class Sensor:
         # )
 
         # draw visible sensor area
-
         # print(visible_area.geom_type)
         # print(visible_area.exterior.xy)
+
+
 
         params = ShapeParams()
         params.facecolor = "g"
@@ -167,3 +186,31 @@ class Sensor:
         #                     vertices = np.array(obstacle_polygon.exterior.xy).T
         #                     Polygon(vertices).draw(renderer, params)
         #                     # renderer.ax.fill(*obj.exterior.xy, "g", alpha=0.2, zorder=10) 
+
+
+        # draw occluded lanelets
+        params = ShapeParams()
+        params.facecolor = "r"
+        params.edgecolor = "r"
+        params.opacity = 0.2
+        obstacle_polygon = obstacle_polygon.intersection(self.road_polygon)
+        if obstacle_polygon is not None:
+                if obstacle_polygon.geom_type == "MultiPolygon":
+                    for geom in obstacle_polygon.geoms:
+                        vertices = np.array(geom.exterior.xy).T
+                        Polygon(vertices).draw(renderer, params)
+                        # renderer.ax.fill(*geom.exterior.xy, "g", alpha=0.2, zorder=10)
+                elif obstacle_polygon.geom_type == "Polygon":
+                    vertices = np.array(obstacle_polygon.exterior.xy).T
+                    Polygon(vertices).draw(renderer, params)
+                    # renderer.ax.fill(*obstacle_polygon.exterior.xy, "g", alpha=0.2, zorder=10)
+                else:
+                    pass
+                    # for obj in obstacle_polygon.geoms:
+                    #     if obj.geom_type == "Polygon":
+                    #         vertices = np.array(obstacle_polygon.exterior.xy).T
+                    #         Polygon(vertices).draw(renderer, params)
+                            # renderer.ax.fill(*obj.exterior.xy, "g", alpha=0.2, zorder=10) 
+
+
+

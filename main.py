@@ -2,6 +2,7 @@ import os
 import matplotlib as mpl
 from tqdm import tqdm
 import warnings
+import numpy as np
 import matplotlib.pyplot as plt
 from commonroad.visualization.mp_renderer import MPRenderer, MPDrawParams
 from commonroad.common.file_reader import CommonRoadFileReader
@@ -9,6 +10,7 @@ from commonroad.common.file_reader import CommonRoadFileReader
 from config import ConfigManager
 from agent import create_agents, update_agents
 from building import create_buildings
+from phantom import create_phantoms
 from sensor import Sensor
 
 
@@ -52,7 +54,49 @@ class Visualizer:
             agent.draw(renderer)
 
         ego = agents[0]
-        sensor = Sensor(config.sensor)
+        sensor = Sensor(config.sensor, scenario.lanelet_network)
+        sensor.draw(
+            renderer,
+            ego.state.position,
+            ego.state.orientation,
+            dynamic_obstacles=agents[1:],
+            static_obstacles=buildings,
+        )
+        renderer.render(show=config.visualization.show)
+
+        os.makedirs(f"{config.basic.result_dir}/images", exist_ok=True)
+        plt.savefig(
+            f"{config.basic.result_dir}/images/{scenario.scenario_id}_{timestep}.png"
+        )
+
+        if config.visualization.show:
+            plt.pause(0.05)
+
+    @staticmethod
+    def draw_step_with_phantoms(renderer, scenario, agents, buildings, phantoms, timestep, config):
+        mpparams = MPDrawParams()
+        mpparams.dynamic_obstacle.time_begin = timestep
+        mpparams.dynamic_obstacle.draw_icon = False
+        # mpparams.dynamic_obstacle.draw_icon = config.visualization.draw_icons
+        mpparams.dynamic_obstacle.show_label = False
+        # mpparams.dynamic_obstacle.show_label = config.visualization.show_labels
+        mpparams.dynamic_obstacle.vehicle_shape.occupancy.shape.facecolor = "#E37222"
+        mpparams.dynamic_obstacle.vehicle_shape.occupancy.shape.edgecolor = "#003359"
+
+        mpparams.static_obstacle.show_label = False
+        # mpparams.static_obstacle.show_label = config.visualization.show_labels
+        mpparams.static_obstacle.occupancy.shape.facecolor = "#A30000"
+        mpparams.static_obstacle.occupancy.shape.edgecolor = "#756F61"
+
+        scenario.draw(renderer, mpparams)
+        for agent in agents:
+            agent.draw(renderer)
+
+        for phantom in phantoms:
+            phantom.draw(renderer)
+
+        ego = agents[0]
+        sensor = Sensor(config.sensor, scenario.lanelet_network)
         sensor.draw(
             renderer,
             ego.state.position,
@@ -88,14 +132,23 @@ def main():
         "scenarios/ZAM_Occlusion-1_1_T-1.xml"
     ).open()
 
+    scenario.lanelet_network
+
     renderer = MPRenderer()
     agents = create_agents(scenario, config.agents)
     buildings = create_buildings(scenario.static_obstacles)
 
+    phantoms = create_phantoms(scenario, config.phantom, agents[0].state, buildings)
+    # sort by distance to ego
+    print(agents[0].state.position)
+    phantoms = sorted(phantoms, key=lambda x: np.linalg.norm(x.state.position - agents[0].state.position))
+    phantoms = phantoms[:10]
+
     config_basic = config.basic
     for timestep in tqdm(range(int(config_basic.duration / config_basic.dt))):
         update_agents(agents, timestep, dt=config_basic.dt)
-        Visualizer.draw_step(renderer, scenario, agents, buildings, timestep, config)
+        # Visualizer.draw_step(renderer, scenario, agents, buildings, timestep, config)
+        Visualizer.draw_step_with_phantoms(renderer, scenario, agents, buildings, phantoms, timestep, config)
 
 
 if __name__ == "__main__":
