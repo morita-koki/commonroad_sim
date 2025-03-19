@@ -1,8 +1,8 @@
-
 import numpy as np
 from shapely.geometry import Point
 from commonroad.geometry.shape import Rectangle
-from commonroad.scenario.trajectory import CustomState
+from commonroad.scenario.trajectory import CustomState, Trajectory
+from commonroad.prediction.prediction import TrajectoryPrediction
 
 import helper as hf
 
@@ -53,6 +53,47 @@ class Agent:
                 length=self.config_agent.obstacle_shape[1],
             ),
         )
+
+    def create_hypothesis(self):
+
+        acceleration_range = np.array(self.config_agent.acceleration_range)
+        prediction_time = self.config_agent.prediction_time
+
+        accelerations = np.linspace(acceleration_range[0], acceleration_range[1], 10)
+        time_seq = np.arange(0, prediction_time, self.config_agent.basic.dt)
+
+        agent_orient = np.array(
+            [np.cos(self.state.orientation), np.sin(self.state.orientation)]
+        )[:, np.newaxis]
+
+        agent_hypothesis = [None for _ in range(len(accelerations))]
+        for j, acceleration in enumerate(accelerations):
+            hypothesis = (
+                self.state.velocity * time_seq + 0.5 * acceleration * time_seq**2
+            )
+            hypothesis[hypothesis < 0] = 0
+            agent_hypothesis[j] = (
+                self.state.position[:, np.newaxis] + hypothesis * agent_orient
+            )
+        agent_predictions = [None for _ in range(len(accelerations))]
+        for j, acceleration in enumerate(accelerations):
+            agent_predictions[j] = TrajectoryPrediction(
+                shape=Rectangle(width=2.0, length=4.0),
+                trajectory=Trajectory(
+                    initial_time_step=self.state.time_step,
+                    state_list=[
+                        CustomState(
+                            position=agent_hypothesis[j][:, k],
+                            velocity=self.state.velocity,
+                            orientation=self.state.orientation,
+                            time_step=self.state.time_step + k,
+                        )
+                        for k in range(len(time_seq))
+                    ],
+                ),
+            )
+
+        return accelerations, agent_predictions
 
     def draw(self, renderer):
         shape = Rectangle(

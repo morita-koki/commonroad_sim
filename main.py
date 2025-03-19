@@ -3,6 +3,7 @@ import matplotlib as mpl
 from tqdm import tqdm
 import warnings
 import numpy as np
+from PIL import Image
 import matplotlib.pyplot as plt
 from commonroad.visualization.mp_renderer import MPRenderer, MPDrawParams
 from commonroad.common.file_reader import CommonRoadFileReader
@@ -10,8 +11,9 @@ from commonroad.common.file_reader import CommonRoadFileReader
 from config import ConfigManager
 from agent import create_agents, update_agents
 from building import create_buildings
-from phantom import create_phantoms
+from phantom import create_phantoms, update_phantoms
 from sensor import Sensor
+from motion_checker import MotionChecker
 
 
 def set_non_blocking() -> None:
@@ -31,6 +33,7 @@ def set_non_blocking() -> None:
             UserWarning,
             stacklevel=3,
         )
+
 
 class Visualizer:
     @staticmethod
@@ -73,7 +76,9 @@ class Visualizer:
             plt.pause(0.05)
 
     @staticmethod
-    def draw_step_with_phantoms(renderer, scenario, agents, buildings, phantoms, timestep, config):
+    def draw_step_with_phantoms(
+        renderer, scenario, agents, buildings, phantoms, timestep, config
+    ):
         mpparams = MPDrawParams()
         mpparams.dynamic_obstacle.time_begin = timestep
         mpparams.dynamic_obstacle.draw_icon = False
@@ -108,18 +113,33 @@ class Visualizer:
 
         os.makedirs(f"{config.basic.result_dir}/images", exist_ok=True)
         plt.savefig(
-            f"{config.basic.result_dir}/images/{scenario.scenario_id}_{timestep}.png"
+            # f"{config.basic.result_dir}/images/{scenario.scenario_id}_{timestep}.png"
+            f"{config.basic.result_dir}/images/{timestep}.png"
         )
 
         if config.visualization.show:
             plt.pause(0.05)
 
     @staticmethod
-    def make_gif(self, renderer, scenario, agents, time_steps):
+    def make_gif(config, time_steps):
+        images = []
         for timestep in time_steps:
-            pass
+            filename = f"{config.basic.result_dir}/images/{timestep}.png"
+            # load image with PIL
+            img = Image.open(filename)
+            # append image to list
+            images.append(img)
+        # save images as gif
+        images[0].save(
+            f"{config.basic.result_dir}/{config.basic.result_dir}.gif",
+            save_all=True,
+            append_images=images[1:],
+            duration=100,
+            loop=0,
+            fps=3,
+        )
 
-        raise NotImplementedError
+        # raise NotImplementedError
 
 
 def main():
@@ -140,15 +160,28 @@ def main():
 
     phantoms = create_phantoms(scenario, config.phantom, agents[0].state, buildings)
     # sort by distance to ego
-    print(agents[0].state.position)
-    phantoms = sorted(phantoms, key=lambda x: np.linalg.norm(x.state.position - agents[0].state.position))
-    phantoms = phantoms[:10]
-
+    # print(agents[0].state.position)
+    phantoms = sorted(
+        phantoms,
+        key=lambda x: np.linalg.norm(x.state.position - agents[0].state.position),
+    )
+    # phantoms = phantoms[:2]
+    phantoms = phantoms[2:3]
+    motion_checker = MotionChecker(config)
     config_basic = config.basic
     for timestep in tqdm(range(int(config_basic.duration / config_basic.dt))):
         update_agents(agents, timestep, dt=config_basic.dt)
+        update_phantoms(agents[0], agents[1:], phantoms, timestep, config)
+        motion_checker.evaluate(agents[1], phantoms[0])
         # Visualizer.draw_step(renderer, scenario, agents, buildings, timestep, config)
-        Visualizer.draw_step_with_phantoms(renderer, scenario, agents, buildings, phantoms, timestep, config)
+        Visualizer.draw_step_with_phantoms(
+            renderer, scenario, agents, buildings, phantoms, timestep, config
+        )
+
+    # plt.ion off
+    plt.ioff()
+    Visualizer.make_gif(config, range(int(config_basic.duration / config_basic.dt)))
+    MotionChecker.make_gif(config, range(int(config_basic.duration / config_basic.dt)))
 
 
 if __name__ == "__main__":
