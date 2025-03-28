@@ -57,8 +57,9 @@ class PhantomAgent:
         acceleration_range = np.array(self.config_agent.acceleration_range)
         prediction_time = self.config_agent.prediction_time
 
-        velocities = np.linspace(velocity_range[0], velocity_range[1], 10)
-        accelerations = np.linspace(acceleration_range[0], acceleration_range[1], 10)
+        num_split = 20
+        velocities = np.linspace(velocity_range[0], velocity_range[1], num_split)
+        accelerations = np.linspace(acceleration_range[0], acceleration_range[1], num_split)
 
         time_seq = np.arange(0, prediction_time, self.config_agent.basic.dt)
         phantom_hypotheses = np.zeros(

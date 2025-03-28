@@ -59,7 +59,9 @@ class Agent:
         acceleration_range = np.array(self.config_agent.acceleration_range)
         prediction_time = self.config_agent.prediction_time
 
-        accelerations = np.linspace(acceleration_range[0], acceleration_range[1], 10)
+
+        num_split = 20
+        accelerations = np.linspace(acceleration_range[0], acceleration_range[1], num_split)
         time_seq = np.arange(0, prediction_time, self.config_agent.basic.dt)
 
         agent_orient = np.array(
@@ -95,14 +97,14 @@ class Agent:
 
         return accelerations, agent_predictions
 
-    def draw(self, renderer):
+    def draw(self, renderer, shapeparams=None):
         shape = Rectangle(
             width=2.0,
             length=4.0,
             center=self.state.position,
             orientation=self.state.orientation,
         )
-        shape.draw(renderer)
+        shape.draw(renderer, shapeparams)
 
 
 def create_agents(scenario, config_agents: list):

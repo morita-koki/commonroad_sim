@@ -6,6 +6,7 @@ import numpy as np
 from PIL import Image
 import matplotlib.pyplot as plt
 from commonroad.visualization.mp_renderer import MPRenderer, MPDrawParams
+from commonroad.geometry.shape import ShapeParams
 from commonroad.common.file_reader import CommonRoadFileReader
 
 from config import ConfigManager
@@ -94,7 +95,12 @@ class Visualizer:
         mpparams.static_obstacle.occupancy.shape.edgecolor = "#756F61"
 
         scenario.draw(renderer, mpparams)
-        for agent in agents:
+        ego_shape_params = ShapeParams()
+        # edge is blue and face is sky blue
+        ego_shape_params.edgecolor = "#003359"
+        ego_shape_params.facecolor = "#87CEEB"
+        agents[0].draw(renderer, ego_shape_params)
+        for agent in agents[1:]:
             agent.draw(renderer)
 
         for phantom in phantoms:
@@ -129,6 +135,7 @@ class Visualizer:
             img = Image.open(filename)
             # append image to list
             images.append(img)
+            img.close()
         # save images as gif
         images[0].save(
             f"{config.basic.result_dir}/{config.basic.result_dir}.gif",

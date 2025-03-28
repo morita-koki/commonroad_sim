@@ -6,7 +6,7 @@ from PIL import Image
 from commonroad.scenario.trajectory import State
 from commonroad.scenario.trajectory import Trajectory, State
 from commonroad.prediction.prediction import TrajectoryPrediction
-from metrics import DCE, TTC
+from metrics import DCE, TTC, TTCE
 
 
 class MotionChecker:
