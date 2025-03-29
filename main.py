@@ -118,6 +118,8 @@ class Visualizer:
         renderer.render(show=config.visualization.show)
 
         os.makedirs(f"{config.basic.result_dir}/images", exist_ok=True)
+        plt.xlim(15, 75)
+        plt.ylim(-30, 30)
         plt.savefig(
             # f"{config.basic.result_dir}/images/{scenario.scenario_id}_{timestep}.png"
             f"{config.basic.result_dir}/images/{timestep}.png"
@@ -135,7 +137,7 @@ class Visualizer:
             img = Image.open(filename)
             # append image to list
             images.append(img)
-            img.close()
+            # img.close()
         # save images as gif
         images[0].save(
             f"{config.basic.result_dir}/{config.basic.result_dir}.gif",

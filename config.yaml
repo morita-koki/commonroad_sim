@@ -3,7 +3,7 @@
 
 basic:
   dt: 0.05 # [s]
-  duration: 5.0 # [s]
+  duration: 10.0 # [s]
   result_dir: results
 
 
@@ -27,7 +27,7 @@ phantom:
   sensor: ${sensor}
   basic: ${basic}
   velocity_range: [0.0, 15.0]
-  acceleration_range: [-0.3, 0.2]
+  acceleration_range: [-3.0, 2.0]
   prediction_time: 3.0
 
 agents:
@@ -39,7 +39,7 @@ agents:
     initial_velocity: 0.0
     initial_acceleration: 0.0
     initial_orientation: 90.0
-    acceleration_range: [-0.3, 0.2]
+    acceleration_range: [-3.0, 2.0]
     prediction_time: 3.0
 
   - type: vehicle
@@ -49,7 +49,7 @@ agents:
     initial_velocity: 8.0
     initial_acceleration: 0.0
     initial_orientation: -90.0
-    acceleration_range: [-0.3, 0.2]
+    acceleration_range: [-3.0, 2.0]
     prediction_time: 3.0
 
   # - type: vehicle
