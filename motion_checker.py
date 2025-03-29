@@ -6,7 +6,7 @@ from PIL import Image
 from commonroad.scenario.trajectory import State
 from commonroad.scenario.trajectory import Trajectory, State
 from commonroad.prediction.prediction import TrajectoryPrediction
-from metrics import DCE, TTC
+from metrics import DCE, TTC, TTCE
 
 
 class MotionChecker:
@@ -28,9 +28,11 @@ class MotionChecker:
 
         dce = DCE(self.config)
         ttc = TTC(self.config)
+        ttce = TTCE(self.config)
 
         results = dce.evaluate(agent_predictions, phantom_predictions)
         results = ttc.evaluate(results)
+        results = ttce.evaluate(results)
 
         # save results to file
         save_dir = Path(self.config.basic.result_dir) / "metrics" / "tmp"
@@ -129,6 +131,7 @@ class MotionChecker:
         for timestep in time_steps:
             filename = dir / f"results_{timestep:03d}.npy"
             item = np.load(filename, allow_pickle=True).item()
+            # print(item)
             items.append(item)
 
         # create gif

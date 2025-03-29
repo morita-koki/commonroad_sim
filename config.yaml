@@ -18,7 +18,7 @@ sensor:
 
 motion_checker:
   velocity_range: [0.0, 15.0]
-  acceleration_range: [-0.3, 0.2]
+  acceleration_range: [-3.0, 3.0]
   prediction_time: 3.0
   show: False
 
