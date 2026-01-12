@@ -1,7 +1,7 @@
 basic:
   dt: 0.1 # [s]
   duration: 10.0 # [s]
-  result_dir: results
+  result_dir: results2_8m_per_sec
 
 visualization:
   show: False
@@ -35,17 +35,17 @@ agents:
     initial_acceleration: 0.0
     initial_orientation: 90.0
     acceleration_range: [-3.0, 2.0]
-    prediction_time: 4.0
+    prediction_time: 3.0
 
   - type: vehicle
     basic: ${basic}
     obstacle_shape: [2.0, 4.0]
     initial_position: [43.5, 20.0]
-    initial_velocity: 6.0
+    initial_velocity: 8.0
     initial_acceleration: 0.0
     initial_orientation: -90.0
     acceleration_range: [-3.0, 2.0]
-    prediction_time: 4.0
+    prediction_time: 3.0
 
   # - type: vehicle
   #   obstacle_shape: [2.0, 4.0]

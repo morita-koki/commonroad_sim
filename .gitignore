@@ -4,3 +4,7 @@ results/*
 
 analysis/possible/*
 analysis/risk/*
+**/*.png
+**/*.pdf
+**/*.gif
+**/*.npy
